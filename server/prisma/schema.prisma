@@ -1,0 +1,101 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------------------
+// ENUMS
+// ----------------------------------------------------
+
+enum NeedCategory {
+  FOOD
+  MEDICINE
+  RESCUE
+}
+
+// ----------------------------------------------------
+// MODELS
+// ----------------------------------------------------
+
+model Village {
+  id                  String     @id @default(uuid())
+  name                String
+  latitude            Float
+  longitude           Float
+  vulnerability_score Float
+  region_name         String
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  safeZones SafeZone[]
+  victims   Victim[]
+
+  @@index([region_name])
+  @@index([latitude, longitude])
+  @@map("villages")
+}
+
+model SafeZone {
+  id               String     @id @default(uuid())
+  name             String
+  latitude         Float
+  longitude        Float
+  elevation_meters Float
+  capacity         Int
+  structure_type   String     // e.g., 'Concrete School', 'Elevated Cyclone Shelter'
+  villageId        String     @map("village_id")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  village  Village    @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  sosPings SOS_Ping[]
+
+  // Fast query index on villageId for instant evacuation lookup
+  @@index([villageId])
+  @@index([villageId, elevation_meters(sort: Desc)])
+  @@map("safe_zones")
+}
+
+model Victim {
+  id           String     @id @default(uuid())
+  phone_number String     @unique @map("phone_number")
+  villageId    String     @map("village_id")
+  status       String     @default("SAFE")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  village  Village    @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  sosPings SOS_Ping[]
+
+  // High-traffic indexing for crisis events
+  @@index([phone_number])
+  @@index([villageId])
+  @@index([villageId, status])
+  @@map("victims")
+}
+
+model SOS_Ping {
+  id            String       @id @default(uuid())
+  victimId      String       @map("victim_id")
+  safeZoneId    String?      @map("safe_zone_id") // Predicted nearest safe zone based on village
+  need_category NeedCategory @map("need_category")
+  resolved      Boolean      @default(false)
+  timestamp     DateTime     @default(now())
+
+  // Relations
+  victim   Victim    @relation(fields: [victimId], references: [id], onDelete: Cascade)
+  safeZone SafeZone? @relation(fields: [safeZoneId], references: [id], onDelete: SetNull)
+
+  // Crisis dispatch & lookup indexes
+  @@index([victimId])
+  @@index([safeZoneId])
+  @@index([resolved, need_category, timestamp(sort: Desc)])
+  @@map("sos_pings")
+}
