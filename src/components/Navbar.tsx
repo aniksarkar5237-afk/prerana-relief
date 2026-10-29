@@ -42,31 +42,22 @@ export default function Navbar({ onOpenReporter, activeTab = 'Home', onTabChange
     <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-8 lg:px-12 pt-4 sm:pt-6">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
-        {/* Brand Logo - PRERANAAID // RELIEFGRID matching image_16.png */}
+        {/* Brand Logo - PreranaAid // ReliefGrid matching cinematic dusk visual */}
         <button
           type="button"
           onClick={() => handleTabClick('Home')}
           className="flex items-center gap-2 group select-none text-left cursor-pointer"
         >
-          <span
-            className={`text-sm sm:text-base font-mono font-extrabold tracking-wider transition-colors ${
-              isHome
-                ? 'text-[#1a1f1b] drop-shadow-sm'
-                : 'text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]'
-            }`}
-          >
-            PRERANAAID // RELIEFGRID
+          <span className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] group-hover:text-cyan-200 transition-colors">
+            PreranaAid
+          </span>
+          <span className="hidden xl:inline-block text-[10px] font-mono font-bold tracking-widest text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-500/30">
+            RELIEFGRID
           </span>
         </button>
 
-        {/* Floating Enclosed Pill-Shaped Navigation Bar (Center Tube) */}
-        <div
-          className={`hidden lg:flex items-center rounded-full px-2 py-1.5 transition-all duration-300 ${
-            isHome
-              ? 'bg-white/80 hover:bg-white/90 backdrop-blur-xl border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.06)]'
-              : 'bg-[#0E1626]/80 hover:bg-[#0E1626]/90 backdrop-blur-2xl border border-slate-700/60 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
-          }`}
-        >
+        {/* Floating Enclosed Pill-Shaped Navigation Bar (Center Tube on Dark Glass Overlay) */}
+        <div className="hidden lg:flex items-center rounded-full px-2 py-1.5 transition-all duration-300 bg-[#0E1626]/80 hover:bg-[#0E1626]/92 backdrop-blur-2xl border border-slate-700/60 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
           {navTabs.map((tab) => {
             const isActive = activeTab === tab.name;
             return (
@@ -76,19 +67,13 @@ export default function Navbar({ onOpenReporter, activeTab = 'Home', onTabChange
                 onClick={() => handleTabClick(tab.name)}
                 className={`transition-all duration-200 text-xs xl:text-sm cursor-pointer flex items-center gap-1 ${
                   isActive
-                    ? isHome
-                      ? 'bg-[#1e231f] text-white shadow-sm font-semibold rounded-full px-4 py-1.5'
-                      : 'bg-[#1e293b]/95 text-white shadow-sm font-semibold rounded-full px-4 py-1.5 border border-slate-600/60'
-                    : isHome
-                    ? 'text-[#444c45] hover:text-[#181c19] px-3.5 py-1.5 rounded-full hover:bg-black/5 font-medium'
+                    ? 'bg-[#1e293b]/95 text-white shadow-[0_0_15px_rgba(52,211,153,0.2)] font-semibold rounded-full px-4 py-1.5 border border-slate-600/60'
                     : 'text-slate-300 hover:text-white px-3.5 py-1.5 rounded-full hover:bg-white/5 font-medium'
                 }`}
               >
                 <span>{tab.name}</span>
                 {tab.hasDot && (
-                  <span className={`font-bold text-xs ${isHome ? 'text-cyan-600' : 'text-cyan-400'}`}>
-                    •
-                  </span>
+                  <span className="text-cyan-400 font-bold ml-0.5">•</span>
                 )}
               </button>
             );
@@ -101,11 +86,7 @@ export default function Navbar({ onOpenReporter, activeTab = 'Home', onTabChange
           <button
             type="button"
             onClick={handleOpenReporter}
-            className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-all duration-200 backdrop-blur-md shadow-md cursor-pointer flex items-center gap-1.5 ${
-              isHome
-                ? 'border border-[#2b332c]/50 bg-white/50 hover:bg-white/85 text-[#1b211c]'
-                : 'border border-slate-700/70 bg-[#0E1626]/80 hover:bg-[#1E293B] text-slate-100 hover:border-cyan-400/50 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
-            }`}
+            className="px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-all duration-200 backdrop-blur-md shadow-md cursor-pointer flex items-center gap-1.5 border border-slate-700/70 bg-[#0E1626]/80 hover:bg-[#1E293B] text-slate-100 hover:border-cyan-400/50 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
           >
             <span>Launch Grid</span>
           </button>

@@ -47,18 +47,18 @@ export default function Home() {
       {/* ------------------------------------------------------------- */}
       {/* Full-Screen Natural Delta Canvas */}
       <div
-        className="fixed inset-0 bg-cover bg-[center_52%] bg-no-repeat pointer-events-none -z-20 transition-all duration-700"
+        className="fixed inset-0 bg-cover bg-[center_48%] bg-no-repeat pointer-events-none -z-20 transition-all duration-700"
         style={{
           backgroundImage: `url('/delta-hero-bg.jpg')`,
-          filter: activeTab === 'Home' ? 'brightness(1.12) contrast(1.08) saturate(1.18)' : 'brightness(0.95) contrast(1.08) saturate(1.18)',
+          filter: activeTab === 'Home' ? 'brightness(1.04) contrast(1.06) saturate(1.16)' : 'brightness(0.95) contrast(1.08) saturate(1.18)',
         }}
       />
 
-      {/* Subtle Organic Dark Obsidian Tint Layer (rgba(8, 13, 26, 0.45) on sub-tabs) */}
+      {/* Subtle Organic Dark Obsidian Tint Layer (#080D1A) */}
       <div
-        className="fixed inset-0 pointer-events-none -z-10 transition-colors duration-500 backdrop-blur-[1.5px]"
+        className="fixed inset-0 pointer-events-none -z-10 transition-colors duration-500 backdrop-blur-[1px]"
         style={{
-          backgroundColor: activeTab === 'Home' ? 'rgba(8, 13, 26, 0.06)' : 'rgba(8, 13, 26, 0.45)',
+          backgroundColor: activeTab === 'Home' ? 'rgba(8, 13, 26, 0.22)' : 'rgba(8, 13, 26, 0.45)',
         }}
       />
 
@@ -69,13 +69,13 @@ export default function Home() {
         </div>
       )}
 
-      {/* Top Misty Light Halo Layer (Exact organic fog blend) */}
+      {/* Top Misty Dusk Halo Layer */}
       <div
         className="fixed inset-x-0 top-0 h-40 sm:h-56 pointer-events-none -z-10 transition-opacity duration-500"
         style={{
           background:
             activeTab === 'Home'
-              ? 'linear-gradient(to bottom, rgba(235, 240, 234, 0.95) 0%, rgba(235, 240, 234, 0.7) 35%, transparent 100%)'
+              ? 'linear-gradient(to bottom, rgba(8, 13, 26, 0.65) 0%, rgba(8, 13, 26, 0.2) 45%, transparent 100%)'
               : 'linear-gradient(to bottom, rgba(14, 22, 38, 0.85) 0%, rgba(8, 13, 26, 0.5) 50%, transparent 100%)',
         }}
       />

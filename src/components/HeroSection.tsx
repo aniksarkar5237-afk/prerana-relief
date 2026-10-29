@@ -17,52 +17,48 @@ export default function HeroSection({ onEmergencyClick }: HeroSectionProps) {
   };
 
   return (
-    <section className="relative w-full h-[100dvh] max-h-[100dvh] flex flex-col justify-between overflow-hidden bg-[#dce3da] select-none">
-      {/* Cinematic Delta Background Image - Cleaned Sky, Reconstructed Roots, No Ghost Text or Artifacts */}
-      <div 
-        className="absolute inset-0 bg-cover bg-[center_52%] bg-no-repeat pointer-events-none transition-transform duration-1000 scale-[1.01]"
-        style={{ 
-          backgroundImage: `url('/delta-hero-bg.jpg')`,
-          filter: 'brightness(1.12) contrast(1.08) saturate(1.18)',
-        }}
-      />
-
+    <section className="relative w-full h-[100dvh] max-h-[100dvh] flex flex-col justify-between overflow-hidden bg-transparent select-none">
       {/* Dynamic Volcanic Eruption Ember Sparks & Forest Firefly Particles */}
       <HeroEmberOverlay />
 
-      {/* Top Natural Fog Layer - Light, clean daylight blend for crisp contrast without ghost lines */}
+      {/* Top Natural Fog Layer - Subtle Dark Dusk Halo */}
       <div 
-        className="absolute inset-x-0 top-0 h-32 sm:h-44 pointer-events-none z-10"
+        className="absolute inset-x-0 top-0 h-40 sm:h-52 pointer-events-none z-10"
         style={{
-          background: 'linear-gradient(to bottom, rgba(238, 242, 237, 0.82) 0%, rgba(238, 242, 237, 0.45) 50%, transparent 100%)',
+          background: 'linear-gradient(to bottom, rgba(8, 13, 26, 0.75) 0%, rgba(8, 13, 26, 0.4) 45%, transparent 100%)',
         }}
       />
 
-      {/* Top Section: Header Spacer & Editorial Headline (Single-Screen Fitted) */}
+      {/* Top Section: Header Spacer, Editorial Headline & Subtitle */}
       <div className="relative z-20 pt-20 sm:pt-24 md:pt-28 px-4 sm:px-6 text-center flex flex-col items-center">
         {/* Editorial Headline - Deep, Ultra-Crisp High-Contrast Serif */}
-        <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[62px] font-bold text-[#08100b] tracking-tight leading-[1.08] drop-shadow-[0_2px_4px_rgba(255,255,255,0.95)] select-none">
+        <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[62px] font-bold text-white tracking-[-0.02em] leading-[1.08] drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] select-none">
           Protecting Lives,<br />
           Restoring the Delta
         </h1>
+
+        {/* Subtitle - Readable Sans-Serif Typography */}
+        <p className="mt-3 sm:mt-4 max-w-2xl text-xs sm:text-sm md:text-[15px] text-slate-200/95 font-sans leading-relaxed text-center drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] px-4">
+          Protecting vulnerable communities is essential for creating a resilient and sustainable future. Dispatching emergency rescue, monitoring flood radar, and restoring the coastal ecosystem.
+        </p>
       </div>
 
-      {/* Center Chamber: Leaves the Volcanic Stump Eruption in full cinematic display */}
+      {/* Center Chamber: Leaves the Volcanic Tree Canopy & Lava Eruption in full cinematic display */}
       <div className="flex-1 pointer-events-none" />
 
-      {/* Bottom Action CTA Button Group - Matching Reference Picture 2 Aesthetic */}
-      <div className="relative z-20 pb-8 sm:pb-10 md:pb-12 px-4 flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
+      {/* Bottom Action CTA Button Group - Matching Reference Aesthetic */}
+      <div className="relative z-20 pb-16 sm:pb-20 px-4 flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
         
-        {/* 1. "Start Button ↗" (Fiery Neon Gradient Glow Pill) */}
+        {/* 1. "Start Button ↗" (Deep obsidian core + fiery neon gradient glow) */}
         <button
           type="button"
           onClick={onEmergencyClick}
           className="relative group p-[2px] rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer focus:outline-none select-none"
           aria-label="Start Button"
         >
-          {/* Ambient fiery bloom glow behind the button (diffuses across the misty water) */}
+          {/* Ambient fiery bloom glow behind the button */}
           <span 
-            className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-600 opacity-65 blur-md group-hover:opacity-100 group-hover:blur-lg transition-all duration-300 pointer-events-none" 
+            className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-600 opacity-70 blur-md group-hover:opacity-100 group-hover:blur-lg transition-all duration-300 pointer-events-none" 
             aria-hidden="true"
           />
 
@@ -73,13 +69,13 @@ export default function HeroSection({ onEmergencyClick }: HeroSectionProps) {
           />
 
           {/* Button inner dark pill body with subtle warm highlight & inset depth */}
-          <span className="relative z-10 flex items-center gap-2 px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-[#161a17]/94 backdrop-blur-md text-white text-sm sm:text-base font-semibold tracking-normal shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-3px_10px_rgba(245,158,11,0.22)] transition-colors duration-200 group-hover:bg-[#111412]/90">
+          <span className="relative z-10 flex items-center gap-2 px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-[#0A0E17]/95 backdrop-blur-md text-white text-sm sm:text-base font-semibold tracking-normal shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-3px_10px_rgba(245,158,11,0.22)] transition-colors duration-200 group-hover:bg-[#070A10]/95">
             <span className="text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">Start Button</span>
             <ArrowUpRight className="w-4 h-4 text-amber-200 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </span>
         </button>
 
-        {/* 2. "Explore Map" (Frosted Glassmorphism Pill with Soft Cyan-to-Gold Aura Ring - Matching Picture 2) */}
+        {/* 2. "Explore Map" (Frosted Glassmorphism Pill with Soft Cyan-to-Amber Halo Aura) */}
         <button
           type="button"
           onClick={handleExploreMap}
@@ -88,7 +84,7 @@ export default function HeroSection({ onEmergencyClick }: HeroSectionProps) {
         >
           {/* Soft ambient cyan-to-gold aura bloom behind the pill */}
           <span 
-            className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-cyan-400/60 via-teal-300/30 to-amber-300/60 opacity-45 blur-md group-hover:opacity-85 group-hover:blur-lg transition-all duration-300 pointer-events-none" 
+            className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-cyan-400/60 via-teal-300/30 to-amber-300/60 opacity-50 blur-md group-hover:opacity-85 group-hover:blur-lg transition-all duration-300 pointer-events-none" 
             aria-hidden="true"
           />
 
@@ -98,9 +94,9 @@ export default function HeroSection({ onEmergencyClick }: HeroSectionProps) {
             aria-hidden="true"
           />
 
-          {/* Semi-transparent frosted glass body matching Picture 2 */}
-          <span className="relative z-10 flex items-center justify-center px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-[#5b9c9c]/35 backdrop-blur-xl text-[#0b140f] text-sm sm:text-base font-semibold tracking-normal shadow-[inset_0_1px_2px_rgba(255,255,255,0.7),inset_0_-1px_3px_rgba(0,0,0,0.05)] transition-all duration-200 group-hover:bg-[#5b9c9c]/50">
-            <span className="text-[#09120d] drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)] font-medium">
+          {/* Semi-transparent frosted glass body */}
+          <span className="relative z-10 flex items-center justify-center px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-[#12222E]/60 backdrop-blur-xl text-slate-100 text-sm sm:text-base font-semibold tracking-normal shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),inset_0_-1px_3px_rgba(0,0,0,0.3)] transition-all duration-200 group-hover:bg-[#12222E]/80">
+            <span className="text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] font-medium">
               Explore Map
             </span>
           </span>
@@ -108,5 +104,7 @@ export default function HeroSection({ onEmergencyClick }: HeroSectionProps) {
 
       </div>
     </section>
+  );
+}
   );
 }
