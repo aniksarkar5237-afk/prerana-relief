@@ -1,24 +1,27 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+// @ts-ignore
 import L from 'leaflet';
-import UpiDonationModal from './UpiDonationModal';
 import {
-  AlertTriangle,
-  Target,
-  TrendingUp,
-  Package,
-  MapPin,
   Search,
-  Activity,
+  Plus,
+  Minus,
+  Compass,
+  MapPin,
+  ArrowRight,
+  X,
+  Radio,
   Layers,
   Wind,
   ShieldAlert,
-  Radio,
-  Eye,
-  Crosshair,
+  Sparkles,
+  Crosshair
 } from 'lucide-react';
+import OnGroundNeedsModal, { ZoneData } from './OnGroundNeedsModal';
 
-// Fix Leaflet's default marker icon paths for React Leaflet
+// Fix Leaflet's default marker icon paths in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -26,814 +29,691 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Custom Emergency Alert Marker
-const emergencyAlertIcon = new L.DivIcon({
-  className: 'emergency-alert-icon',
-  html: '<div class="pulse-ring"></div><div class="pulse-dot"></div>',
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-});
+export type FilterCategory = 'all' | 'flood' | 'cyclone' | 'landslide' | 'hub';
 
-// Custom Target Lock Reticle Icon
-const targetLockIcon = new L.DivIcon({
-  className: 'target-lock-container',
-  html: '<div class="target-lock-reticle"></div>',
-  iconSize: [60, 60],
-  iconAnchor: [30, 30],
-});
+export interface Hotspot {
+  id: string;
+  name: string;
+  subhead: string;
+  category: 'flood' | 'cyclone' | 'landslide' | 'hub';
+  badgeText: string;
+  severity: 'P0' | 'P1' | 'P2' | 'SAFE';
+  lat: number;
+  lng: number;
+  primaryMetricLabel: string;
+  primaryMetricValue: string;
+  secondaryMetricLabel: string;
+  secondaryMetricValue: string;
+  statusTag: string;
+  zoneRef?: ZoneData;
+}
 
-// Helper for High-Contrast Tactical District HUD Marker Tag
-const createDistrictTagIcon = (name: string, depthBadge: string, pingCount: string, isCritical: boolean) => {
-  return new L.DivIcon({
-    className: 'district-hud-container',
+// -------------------------------------------------------------
+// VERIFIED NON-OVERLAPPING HOTSPOTS ACROSS INDIA
+// -------------------------------------------------------------
+const HOTSPOTS_DATA: Hotspot[] = [
+  {
+    id: 'silchar-barak',
+    name: 'Silchar & Barak Valley Basin',
+    subhead: 'Cachar District, Assam (North-East)',
+    category: 'flood',
+    badgeText: 'Assam • P0',
+    severity: 'P0',
+    lat: 24.8333,
+    lng: 92.7789,
+    primaryMetricLabel: 'River Level',
+    primaryMetricValue: '+1.8m Above Danger Mark',
+    secondaryMetricLabel: '24h Inflow',
+    secondaryMetricValue: '120mm Extreme Rainfall',
+    statusTag: 'Embankment Breached',
+    zoneRef: {
+      id: 1,
+      district: 'Silchar',
+      state: 'Assam',
+      score: 85,
+      rainfallIndex: '+120mm',
+      riverDanger: '+1.5m',
+      unaddressedCount: 42,
+      severity: 'P0'
+    }
+  },
+  {
+    id: 'patna-ganga',
+    name: 'Patna Central Flood Plain',
+    subhead: 'Ganga & Gandak Confluence, Bihar',
+    category: 'flood',
+    badgeText: 'Patna • P1',
+    severity: 'P1',
+    lat: 25.5941,
+    lng: 85.1376,
+    primaryMetricLabel: 'River Level',
+    primaryMetricValue: '+0.6m Warning Stage',
+    secondaryMetricLabel: 'Field Distress',
+    secondaryMetricValue: '16 Active Triage Cases',
+    statusTag: 'Low-Lying Inundation',
+    zoneRef: {
+      id: 2,
+      district: 'Patna',
+      state: 'Bihar',
+      score: 62,
+      rainfallIndex: '+50mm',
+      riverDanger: '+0.4m',
+      unaddressedCount: 15,
+      severity: 'P1'
+    }
+  },
+  {
+    id: 'cyclone-bob',
+    name: 'Bay of Bengal Cyclone Vortex',
+    subhead: 'Maritime Sector 4 (Tracking WNW)',
+    category: 'cyclone',
+    badgeText: 'Cyclone • 140 km/h',
+    severity: 'P0',
+    lat: 16.5000,
+    lng: 87.5000,
+    primaryMetricLabel: 'Wind Speed',
+    primaryMetricValue: '140 km/h (Gusts: 165 km/h)',
+    secondaryMetricLabel: 'Storm Surge',
+    secondaryMetricValue: '3.2m Offshore Waves',
+    statusTag: 'Category 3 Supercell'
+  },
+  {
+    id: 'wayanad-ghats',
+    name: 'Wayanad Hill Slopes',
+    subhead: 'Western Ghats, Kerala (South-West)',
+    category: 'landslide',
+    badgeText: 'Wayanad • P2',
+    severity: 'P2',
+    lat: 11.6854,
+    lng: 76.1320,
+    primaryMetricLabel: 'Slope Moisture',
+    primaryMetricValue: '92% Soil Saturation',
+    secondaryMetricLabel: 'Landslide Risk',
+    secondaryMetricValue: 'Level 2 Warning Area',
+    statusTag: 'Mudflow Hazard Active',
+    zoneRef: {
+      id: 3,
+      district: 'Wayanad',
+      state: 'Kerala',
+      score: 38,
+      rainfallIndex: '+15mm',
+      riverDanger: '-0.2m',
+      unaddressedCount: 5,
+      severity: 'P2'
+    }
+  },
+  {
+    id: 'central-hub',
+    name: 'Central Triage Depot (Nagpur)',
+    subhead: 'National Disaster Logistics Center',
+    category: 'hub',
+    badgeText: 'Central Hub • Active',
+    severity: 'SAFE',
+    lat: 21.1458,
+    lng: 79.0882,
+    primaryMetricLabel: 'Shelter Capacity',
+    primaryMetricValue: '3,000 Emergency Beds',
+    secondaryMetricLabel: 'Logistics Fleet',
+    secondaryMetricValue: '14 Flotilla Dinghies & Medics',
+    statusTag: 'Fully Operational Central Base'
+  },
+  {
+    id: 'south-hub',
+    name: 'Southern Staging Hub (Bengaluru)',
+    subhead: 'Karnataka & Kerala Rapid Triage Depot',
+    category: 'hub',
+    badgeText: 'Safe Hub • Active',
+    severity: 'SAFE',
+    lat: 12.9716,
+    lng: 77.5946,
+    primaryMetricLabel: 'Shelter Capacity',
+    primaryMetricValue: '1,800 Evacuee Capacity',
+    secondaryMetricLabel: 'Medical Inventory',
+    secondaryMetricValue: 'Emergency IV & Blood Stocked',
+    statusTag: 'Staging Ready 100%'
+  }
+];
+
+// -------------------------------------------------------------
+// LEAFLET BIOLUMINESCENT RADAR ICON GENERATOR
+// -------------------------------------------------------------
+const createHotspotIcon = (
+  type: 'flood' | 'cyclone' | 'landslide' | 'hub',
+  badgeText: string
+) => {
+  let ringClass = 'ping-crimson';
+  let dotClass = 'dot-crimson';
+  let badgeClass = 'badge-crimson';
+
+  if (type === 'cyclone') {
+    ringClass = 'ring-vortex-amber';
+    dotClass = 'dot-amber';
+    badgeClass = 'badge-amber';
+  } else if (type === 'landslide') {
+    ringClass = 'ping-yellow';
+    dotClass = 'dot-yellow';
+    badgeClass = 'badge-yellow';
+  } else if (type === 'hub') {
+    ringClass = 'ping-emerald';
+    dotClass = 'dot-emerald';
+    badgeClass = 'badge-emerald';
+  }
+
+  const isCyclone = type === 'cyclone';
+
+  return L.divIcon({
+    className: 'custom-radar-marker',
     html: `
-      <div class="district-hud-badge">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-          <span style="font-weight:800; font-size:11px; color:#ffffff; letter-spacing:-0.2px;">${name}</span>
-          <span style="font-size:9px; font-weight:800; padding:2px 6px; border-radius:5px; background:${
-            isCritical ? '#7f1d1d' : '#78350f'
-          }; color:${isCritical ? '#fecaca' : '#fef08a'}; border:1px solid ${
-      isCritical ? '#ef4444' : '#f59e0b'
-    };">${depthBadge}</span>
-        </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:4px; font-size:10px;">
-          <div style="display:flex; align-items:center; gap:5px;">
-            <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#ef4444; box-shadow:0 0 8px #ef4444;"></span>
-            <span style="font-weight:700; color:#38bdf8;">${pingCount}</span>
-          </div>
-          <span style="font-size:9px; color:#94a3b8; font-weight:600; text-transform:uppercase;">USSD Pings</span>
-        </div>
+      <div class="hotspot-pin-wrapper">
+        <div class="${isCyclone ? 'vortex-anim ' + ringClass : 'pulse-ring-anim ' + ringClass}"></div>
+        <div class="radar-dot ${dotClass}"></div>
+        <div class="radar-badge ${badgeClass}">${badgeText}</div>
       </div>
     `,
-    iconSize: [210, 50],
-    iconAnchor: [105, 25],
+    iconSize: [120, 44],
+    iconAnchor: [60, 22],
+    popupAnchor: [0, -26],
   });
 };
 
-// High-Risk Flood Inundation Zones with Verified Geographic Coordinates
-const FLOOD_DISTRICT_OVERLAYS = [
-  {
-    id: 'sundarbans-gosaba',
-    name: 'Gosaba / Sundarbans Delta',
-    center: [22.08, 88.92] as [number, number],
-    depthBadge: 'Inundation: +2.8m | Critical P0',
-    pingCount: 'Pings: 48 Unresolved',
-    isCritical: true,
-    coordinates: [
-      [22.25, 88.72],
-      [22.32, 88.95],
-      [22.28, 89.22],
-      [21.88, 89.20],
-      [21.68, 88.92],
-      [21.78, 88.62],
-      [22.08, 88.65],
-    ] as [number, number][],
-    details: 'Primary embankment collapse in Gosaba block. Tidal surge penetration 8km inland.',
-  },
-  {
-    id: 'north24-basirhat',
-    name: 'North 24 Parganas (Hingalganj Basin)',
-    center: [22.62, 88.96] as [number, number],
-    depthBadge: 'Inundation: +1.9m | Severe P1',
-    pingCount: 'Pings: 32 Unresolved',
-    isCritical: false,
-    coordinates: [
-      [22.45, 88.75],
-      [22.78, 88.78],
-      [22.88, 89.08],
-      [22.72, 89.18],
-      [22.42, 89.05],
-      [22.38, 88.85],
-    ] as [number, number][],
-    details: 'Ichamati and Raimangal river overflow inundating low-lying farming tracts.',
-  },
-  {
-    id: 'barak-silchar',
-    name: 'Silchar Urban Sector (Barak Valley)',
-    center: [24.82, 92.80] as [number, number],
-    depthBadge: 'Inundation: +3.4m | Critical P0',
-    pingCount: 'Pings: 64 Unresolved',
-    isCritical: true,
-    coordinates: [
-      [24.72, 92.68],
-      [24.92, 92.74],
-      [24.98, 92.90],
-      [24.86, 93.02],
-      [24.70, 92.96],
-      [24.64, 92.80],
-    ] as [number, number][],
-    details: 'Betukandi dyke rupture; major urban settlements submerged with 3.4m flood line.',
-  },
-  {
-    id: 'sagar-kakdwip',
-    name: 'Sagar Island & Kakdwip Sector',
-    center: [21.72, 88.16] as [number, number],
-    depthBadge: 'Inundation: +2.1m | Severe P1',
-    pingCount: 'Pings: 27 Unresolved',
-    isCritical: false,
-    coordinates: [
-      [21.60, 88.02],
-      [21.88, 88.12],
-      [21.94, 88.30],
-      [21.68, 88.26],
-      [21.54, 88.10],
-    ] as [number, number][],
-    details: 'Muriganga river storm tide breaches mud bunds. Low-lying island evacuation underway.',
-  },
-];
-
-// Fallback high-priority requests if database has no active records yet
-const FALLBACK_EMERGENCY_REQUESTS = [
-  {
-    id: 'req-1',
-    title: 'Emergency Rescue Boats & Ration for Silchar',
-    charity_name: 'Assam Valley Relief Taskforce',
-    lat: 24.824,
-    lng: 92.798,
-    severity: 'P0',
-    target_amount: 500000,
-    raised_amount: 142000,
-    supplies_needed: ['Inflatable Rafts', 'Potable Water Kits', 'Baby Food Kits'],
-    active_distress: 64,
-  },
-  {
-    id: 'req-2',
-    title: 'Embankment Repair Materials & Medical Kits',
-    charity_name: 'Bengal Delta Emergency Network',
-    lat: 22.085,
-    lng: 88.925,
-    severity: 'P0',
-    target_amount: 750000,
-    raised_amount: 380000,
-    supplies_needed: ['Geo-textile Sandbags', 'ORS Sachets', 'Water Purification Tabs'],
-    active_distress: 48,
-  },
-  {
-    id: 'req-3',
-    title: 'Amphibious Evacuation Fleet for Hingalganj',
-    charity_name: 'Sundarbans Tiger & Forest Foundation',
-    lat: 22.618,
-    lng: 88.962,
-    severity: 'P1',
-    target_amount: 300000,
-    raised_amount: 95000,
-    supplies_needed: ['Life Jackets', 'Solar Lanterns', 'Emergency Tarpaulins'],
-    active_distress: 32,
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Realistic Animated Cyclone & Meteorological Radar Layer Component
-// ---------------------------------------------------------------------------
-function CycloneRadarOverlay({ visible }: { visible: boolean }) {
+// -------------------------------------------------------------
+// MAP CONTROLLER (Fly-To, Zoom In/Out, Recenter)
+// -------------------------------------------------------------
+function MapController({
+  targetCoords,
+  zoomAction,
+  onResetZoomAction,
+}: {
+  targetCoords: [number, number] | null;
+  zoomAction: 'in' | 'out' | 'recenter' | null;
+  onResetZoomAction: () => void;
+}) {
   const map = useMap();
-  const [, setTick] = useState(0);
 
   useEffect(() => {
-    const onMapChange = () => setTick((t) => t + 1);
-    map.on('move', onMapChange);
-    map.on('zoom', onMapChange);
-    map.on('viewreset', onMapChange);
-    return () => {
-      map.off('move', onMapChange);
-      map.off('zoom', onMapChange);
-      map.off('viewreset', onMapChange);
-    };
-  }, [map]);
+    if (targetCoords) {
+      map.flyTo(targetCoords, 7, { duration: 1.2 });
+    }
+  }, [targetCoords, map]);
 
-  if (!visible) return null;
+  useEffect(() => {
+    if (zoomAction === 'in') {
+      map.zoomIn();
+      onResetZoomAction();
+    } else if (zoomAction === 'out') {
+      map.zoomOut();
+      onResetZoomAction();
+    } else if (zoomAction === 'recenter') {
+      map.flyTo([22.5937, 78.9629], 5, { duration: 1.2 });
+      onResetZoomAction();
+    }
+  }, [zoomAction, map, onResetZoomAction]);
 
-  // Geographic coordinates of Cyclone Eye & Forecast Path (Bay of Bengal -> Sundarbans)
-  const eyeGeo: [number, number] = [20.85, 89.25];
-  const t3Geo: [number, number] = [21.45, 89.10];
-  const t6Geo: [number, number] = [22.08, 88.95]; // Expected Landfall
-  const t12Geo: [number, number] = [22.85, 88.75]; // Inland Dissipation
-
-  const eye = map.latLngToContainerPoint(eyeGeo);
-  const t3 = map.latLngToContainerPoint(t3Geo);
-  const t6 = map.latLngToContainerPoint(t6Geo);
-  const t12 = map.latLngToContainerPoint(t12Geo);
-
-  // Dynamic vortex radius based on map zoom
-  const currentZoom = map.getZoom();
-  const radius = Math.max(90, Math.min(260, 22 * currentZoom));
-
-  return (
-    <svg
-      className="absolute inset-0 w-full h-full pointer-events-none z-[400] overflow-visible"
-      style={{ pointerEvents: 'none' }}
-    >
-      <defs>
-        {/* Wind gradient for spiral arms */}
-        <linearGradient id="cycloneArmGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.85" />
-          <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="#ffffff" stopOpacity="0.05" />
-        </linearGradient>
-
-        {/* Doppler radar precipitation gradient */}
-        <radialGradient id="radarPrecipitation">
-          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.75" />
-          <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.5" />
-          <stop offset="65%" stopColor="#06b6d4" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#0369a1" stopOpacity="0" />
-        </radialGradient>
-
-        {/* Landfall trajectory cone gradient */}
-        <linearGradient id="landfallConeGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-          <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.35" />
-          <stop offset="60%" stopColor="#0ea5e9" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.05" />
-        </linearGradient>
-      </defs>
-
-      {/* 1. Projected 12-Hour Landfall Trajectory Cone */}
-      <g className="landfall-projection">
-        {/* Uncertainty Cone polygon */}
-        <polygon
-          points={`
-            ${eye.x - radius * 0.4},${eye.y} 
-            ${t12.x - radius * 0.8},${t12.y} 
-            ${t12.x + radius * 0.8},${t12.y} 
-            ${eye.x + radius * 0.4},${eye.y}
-          `}
-          fill="url(#landfallConeGradient)"
-          stroke="rgba(244, 63, 94, 0.4)"
-          strokeWidth="1.5"
-          strokeDasharray="6,4"
-        />
-
-        {/* Projected Centerline Track */}
-        <path
-          d={`M ${eye.x} ${eye.y} Q ${t3.x} ${t3.y} ${t6.x} ${t6.y} T ${t12.x} ${t12.y}`}
-          fill="none"
-          stroke="#f43f5e"
-          strokeWidth="2.5"
-          strokeDasharray="8,5"
-          className="radar-cone-animated"
-        />
-
-        {/* Waypoint Nodes */}
-        <g transform={`translate(${t6.x}, ${t6.y})`}>
-          <circle r="6" fill="#f43f5e" stroke="#ffffff" strokeWidth="2" />
-          <text
-            x="10"
-            y="4"
-            fill="#ffffff"
-            fontSize="10"
-            fontWeight="bold"
-            filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))"
-          >
-            T+6h: Sundarbans Landfall (130 km/h)
-          </text>
-        </g>
-
-        <g transform={`translate(${t12.x}, ${t12.y})`}>
-          <circle r="4" fill="#fbbf24" stroke="#ffffff" strokeWidth="1.5" />
-          <text
-            x="8"
-            y="4"
-            fill="#f1f5f9"
-            fontSize="9"
-            fontWeight="600"
-            filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))"
-          >
-            T+12h: Inundation Spate
-          </text>
-        </g>
-      </g>
-
-      {/* 2. Rotating Cyclone Vortex (Counter-Clockwise - Indian Ocean Circulation) */}
-      <g transform={`translate(${eye.x}, ${eye.y})`}>
-        {/* Radar Doppler Precipitation Rings */}
-        <circle r={radius} fill="url(#radarPrecipitation)" />
-
-        {/* Counter-Clockwise Animated Spiral Arms */}
-        <g className="cyclone-vortex-animated">
-          {/* Spiral Arm 1 */}
-          <path
-            d={`M 0 0 C ${radius * 0.3} ${-radius * 0.4}, ${radius * 0.7} ${-radius * 0.3}, ${radius * 0.95} ${radius * 0.2}`}
-            fill="none"
-            stroke="url(#cycloneArmGradient)"
-            strokeWidth="14"
-            strokeLinecap="round"
-          />
-          {/* Spiral Arm 2 */}
-          <path
-            d={`M 0 0 C ${-radius * 0.3} ${radius * 0.4}, ${-radius * 0.7} ${radius * 0.3}, ${-radius * 0.95} ${-radius * 0.2}`}
-            fill="none"
-            stroke="url(#cycloneArmGradient)"
-            strokeWidth="14"
-            strokeLinecap="round"
-          />
-          {/* Spiral Arm 3 */}
-          <path
-            d={`M 0 0 C ${radius * 0.4} ${radius * 0.3}, ${radius * 0.3} ${radius * 0.7}, ${-radius * 0.2} ${radius * 0.95}`}
-            fill="none"
-            stroke="url(#cycloneArmGradient)"
-            strokeWidth="11"
-            strokeLinecap="round"
-          />
-          {/* Spiral Arm 4 */}
-          <path
-            d={`M 0 0 C ${-radius * 0.4} ${-radius * 0.3}, ${-radius * 0.3} ${-radius * 0.7}, ${radius * 0.2} ${-radius * 0.95}`}
-            fill="none"
-            stroke="url(#cycloneArmGradient)"
-            strokeWidth="11"
-            strokeLinecap="round"
-          />
-        </g>
-
-        {/* Cyclone Eye */}
-        <circle r="14" fill="#0f172a" stroke="#ffffff" strokeWidth="2.5" />
-        <circle r="6" fill="#06b6d4" />
-
-        {/* Eye Badge */}
-        <g transform="translate(18, -12)">
-          <rect
-            x="-4"
-            y="-14"
-            width="145"
-            height="24"
-            rx="6"
-            fill="rgba(15, 23, 42, 0.9)"
-            stroke="rgba(6, 182, 212, 0.7)"
-            strokeWidth="1"
-          />
-          <text x="4" y="2" fill="#38bdf8" fontSize="10" fontWeight="bold" fontFamily="sans-serif">
-            CYCLONE VORTEX • 962 hPa
-          </text>
-        </g>
-      </g>
-    </svg>
-  );
+  return null;
 }
 
-// ---------------------------------------------------------------------------
-// Main Disaster Map Component
-// ---------------------------------------------------------------------------
-const DisasterMapInner = () => {
-  const [activeZones, setActiveZones] = useState<any[]>([]);
-  const [emergencyRequests, setEmergencyRequests] = useState<any[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
-  const [map, setMap] = useState<L.Map | null>(null);
+export default function DisasterMapInner() {
+  const [activeFilter, setActiveFilter] = useState<FilterCategory>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [targetCoords, setTargetCoords] = useState<[number, number] | null>(null);
+  const [zoomAction, setZoomAction] = useState<'in' | 'out' | 'recenter' | null>(null);
+  const [selectedTriageZone, setSelectedTriageZone] = useState<ZoneData | null>(null);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  // Basemap Selector: Topo Terrain (Default), NatGeo Physical, Satellite Hybrid
-  const [basemapStyle, setBasemapStyle] = useState<'topo' | 'natgeo' | 'satellite'>('topo');
+  // Filter hotspots based on active pill
+  const visibleHotspots = useMemo(() => {
+    if (activeFilter === 'all') return HOTSPOTS_DATA;
+    return HOTSPOTS_DATA.filter((h) => h.category === activeFilter);
+  }, [activeFilter]);
 
-  // Toggle for meteorological cyclone overlay
-  const [showCycloneRadar, setShowCycloneRadar] = useState(true);
+  // Search suggestions
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return HOTSPOTS_DATA.filter(
+      (h) =>
+        h.name.toLowerCase().includes(q) ||
+        h.subhead.toLowerCase().includes(q) ||
+        h.badgeText.toLowerCase().includes(q) ||
+        h.category.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
 
-  // Target lock coordinates for "Focus Map" animation
-  const [focusedCoord, setFocusedCoord] = useState<[number, number] | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [zonesRes, requestsRes] = await Promise.all([
-          fetch('http://localhost:5000/api/disasters/active-zones'),
-          fetch('http://localhost:5000/api/disasters/emergency-requests'),
-        ]);
-
-        const zones = await zonesRes.json();
-        const requests = await requestsRes.json();
-
-        setActiveZones(Array.isArray(zones) && zones.length > 0 ? zones : []);
-        setEmergencyRequests(
-          Array.isArray(requests) && requests.length > 0 ? requests : FALLBACK_EMERGENCY_REQUESTS
-        );
-      } catch (error) {
-        console.warn('Backend offline or fetching error, using high-priority emergency feeds:', error);
-        setEmergencyRequests(FALLBACK_EMERGENCY_REQUESTS);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Smoothly Fly Map to Coordinate and Activate Lock Reticle
-  const handleFocusLocation = (lat: number, lng: number) => {
-    if (!map) return;
-    setFocusedCoord([lat, lng]);
-    map.flyTo([lat, lng], 10, {
-      duration: 1.6,
-      easeLinearity: 0.25,
-    });
+  const handleSelectSearchResult = (hotspot: Hotspot) => {
+    setTargetCoords([hotspot.lat, hotspot.lng]);
+    setSearchQuery(hotspot.name);
+    setIsSearchFocused(false);
   };
 
-  // Basemap Tile Layer URL Provider
-  const basemapConfig = useMemo(() => {
-    switch (basemapStyle) {
-      case 'natgeo':
-        return {
-          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}',
-          attribution:
-            'Tiles &copy; National Geographic, Esri &mdash; Delta Flood & Disaster Monitoring',
-          maxZoom: 16,
-        };
-      case 'satellite':
-        return {
-          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-          attribution: 'Tiles &copy; Esri World Imagery &mdash; Remote Sensing Satellite',
-          maxZoom: 18,
-        };
-      case 'topo':
-      default:
-        return {
-          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-          attribution:
-            'Tiles &copy; Esri World Topo Map &mdash; Physical Topographic Relief, Rivers & Boundaries',
-          maxZoom: 18,
-        };
+  const handleOpenTriage = (hotspot: Hotspot) => {
+    if (hotspot.zoneRef) {
+      setSelectedTriageZone(hotspot.zoneRef);
+    } else {
+      setSelectedTriageZone({
+        district: hotspot.name.split(' ')[0],
+        state: hotspot.subhead.split(',')[1]?.trim() || 'Bay of Bengal',
+        score: hotspot.severity === 'P0' ? 88 : hotspot.severity === 'P1' ? 64 : 35,
+        severity: hotspot.severity
+      });
     }
-  }, [basemapStyle]);
+  };
 
   return (
-    <div className="relative w-full h-[650px] lg:h-[700px] flex flex-col lg:flex-row bg-[#080C16] rounded-3xl overflow-hidden shadow-2xl border border-slate-800">
-      {/* ================================================================= */}
-      {/* 1. Left/Center 2/3 - Enhanced Interactive GIS Map Viewport        */}
-      {/* ================================================================= */}
-      <div className="w-full lg:w-2/3 h-[420px] lg:h-full relative overflow-hidden">
-        {/* Top Floating Map HUD Header & Basemap Controls */}
-        <div className="absolute top-3 left-14 right-3 z-[500] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-          {/* Tactical Status Pill */}
-          <div className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0B0F19]/90 backdrop-blur-md border border-slate-700/80 shadow-xl">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-            </span>
-            <span className="text-[11px] font-bold tracking-wider text-slate-200 uppercase">
-              Bengal Delta & Assam GIS Radar
-            </span>
-            <span className="text-[10px] text-cyan-400 font-mono pl-1 border-l border-slate-700">
-              Live Topography
-            </span>
-          </div>
+    <div className="relative w-full h-[540px] sm:h-[580px] lg:h-[620px] rounded-2xl overflow-hidden bg-[#080D1A]/85 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.85)] select-none">
+      
+      {/* ------------------------------------------------------------- */}
+      {/* ATMOSPHERIC BACKGROUND GRADIENT & DELTA TEXTURE OVERLAY       */}
+      {/* ------------------------------------------------------------- */}
+      {/* Center Subtle Bioluminescent Glow */}
+      <div className="pointer-events-none absolute inset-0 z-[200] bg-gradient-to-tr from-cyan-500/10 via-transparent to-amber-500/10 mix-blend-screen" />
 
-          {/* Controls: Basemap Selector & Cyclone Radar Toggle */}
-          <div className="pointer-events-auto flex items-center gap-1.5 bg-[#0B0F19]/90 backdrop-blur-md p-1 rounded-xl border border-slate-700/80 shadow-xl">
-            <button
-              onClick={() => setBasemapStyle('topo')}
-              className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all ${
-                basemapStyle === 'topo'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              🏔️ Topo Terrain
-            </button>
-            <button
-              onClick={() => setBasemapStyle('natgeo')}
-              className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all ${
-                basemapStyle === 'natgeo'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              🗺️ NatGeo Physical
-            </button>
-            <button
-              onClick={() => setBasemapStyle('satellite')}
-              className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all ${
-                basemapStyle === 'satellite'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              🛰️ Satellite
-            </button>
+      {/* Atmospheric Edge Vignette - Softens and dissolves borders into delta backdrop */}
+      <div className="pointer-events-none absolute inset-0 z-[300] shadow-[inset_0_0_90px_rgba(8,13,26,0.95)]" />
 
-            <div className="w-[1px] h-4 bg-slate-700 mx-1" />
+      {/* Subtle Tactical Radar Crosshair Grid Overlay */}
+      <div
+        className="pointer-events-none absolute inset-0 z-[250] opacity-35"
+        style={{
+          backgroundImage:
+            'radial-gradient(rgba(6, 182, 212, 0.25) 1px, transparent 1px), linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px)',
+          backgroundSize: '36px 36px, 144px 144px, 144px 144px'
+        }}
+      />
 
-            <button
-              onClick={() => setShowCycloneRadar(!showCycloneRadar)}
-              className={`px-2.5 py-1 text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition-all ${
-                showCycloneRadar
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-              title="Toggle Animated Meteorological Radar & Projected Cyclone Track"
-            >
-              <Wind className="w-3.5 h-3.5" />
-              Cyclone Radar: {showCycloneRadar ? 'ON' : 'OFF'}
-            </button>
-          </div>
-        </div>
+      {/* Tactical Corner HUD Telemetry Badges */}
+      <div className="pointer-events-none absolute top-3.5 left-4 z-[500] hidden sm:flex items-center gap-2 font-mono text-[10px] text-cyan-400/80 uppercase tracking-widest bg-slate-950/60 px-2.5 py-1 rounded-full border border-white/5 backdrop-blur-md">
+        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+        <span>RELIEFGRID // SPATIAL RADAR v2.4</span>
+      </div>
 
-        {/* Map Container centered over Eastern India / Bengal Delta & Assam flood belt */}
-        <MapContainer
-          center={[22.5, 89.0]} // Lat: 22.5, Lng: 89.0 as specified
-          zoom={7.5}
-          minZoom={5}
-          maxBounds={[
-            [17.0, 80.0],
-            [29.0, 97.0],
-          ]}
-          maxBoundsViscosity={0.8}
-          style={{ height: '100%', width: '100%', background: '#e6ebec' }}
-          scrollWheelZoom={true}
-          ref={setMap}
-        >
-          {/* High-Definition Physical/Terrain Basemap Tile Layer */}
-          <TileLayer
-            key={basemapConfig.url}
-            attribution={basemapConfig.attribution}
-            url={basemapConfig.url}
-            maxZoom={basemapConfig.maxZoom}
-          />
+      <div className="pointer-events-none absolute top-3.5 right-4 z-[500] hidden sm:flex items-center gap-2 font-mono text-[10px] text-zinc-400 uppercase tracking-wider bg-slate-950/60 px-2.5 py-1 rounded-full border border-white/5 backdrop-blur-md">
+        <Crosshair className="w-3 h-3 text-cyan-400" />
+        <span>EPSG:3857 // WGS-84</span>
+      </div>
 
-          {/* Secondary boundary overlay for satellite basemap */}
-          {basemapStyle === 'satellite' && (
-            <TileLayer
-              attribution="Esri Labels"
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={18}
+      {/* ------------------------------------------------------------- */}
+      {/* 1. TOP FLOATING CONTROLS: SEARCH BAR + FILTER PILLS TOGETHER  */}
+      {/* (Google Maps Style - Translucent Frosted Glass Texture)       */}
+      {/* ------------------------------------------------------------- */}
+      <div className="absolute top-4 sm:top-5 inset-x-0 z-[1000] flex flex-col items-center gap-2.5 px-3 pointer-events-none">
+        
+        {/* Search Bar */}
+        <div className="relative w-full max-w-sm sm:w-96 pointer-events-auto">
+          <div className="flex items-center gap-2.5 bg-[#0E1626]/85 backdrop-blur-2xl border border-slate-700/60 rounded-full px-4 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.6)] transition-all focus-within:border-cyan-400/70 focus-within:shadow-[0_0_25px_rgba(6,182,212,0.3)]">
+            <Search className="w-4 h-4 text-cyan-400 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              placeholder="Search state, river basin, or triage hub..."
+              className="bg-transparent border-none text-xs sm:text-sm text-white placeholder:text-zinc-400 focus:outline-none w-full font-sans"
             />
-          )}
-
-          {/* ------------------------------------------------------------- */}
-          {/* Affected District & Flood Inundation Overlay Polygons         */}
-          {/* ------------------------------------------------------------- */}
-          {FLOOD_DISTRICT_OVERLAYS.map((zone) => (
-            <React.Fragment key={zone.id}>
-              {/* Semi-transparent glowing blue-cyan fill & pulsing red warning border */}
-              <Polygon
-                positions={zone.coordinates}
-                pathOptions={{
-                  fillColor: '#0ea5e9',
-                  fillOpacity: 0.32,
-                  color: '#ef4444',
-                  weight: 2.5,
-                  dashArray: '6, 6',
-                  className: 'flood-polygon-pulsing',
-                }}
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="text-zinc-400 hover:text-white transition-colors cursor-pointer p-0.5"
               >
-                <Popup className="disaster-popup min-w-[260px]">
-                  <div className="p-3">
-                    <div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs uppercase mb-1">
-                      <ShieldAlert className="w-4 h-4 text-rose-500" /> Flood Inundation Zone
-                    </div>
-                    <h3 className="font-extrabold text-white text-base mb-1">{zone.name}</h3>
-                    <p className="text-xs text-slate-300 mb-2">{zone.details}</p>
-                    <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800 text-[11px] space-y-1">
-                      <div className="text-amber-400 font-semibold">{zone.depthBadge}</div>
-                      <div className="text-cyan-400">{zone.pingCount}</div>
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Autocomplete Suggestions Dropdown */}
+          {isSearchFocused && searchResults.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#0E1626]/95 backdrop-blur-2xl border border-slate-700/70 rounded-2xl p-2 shadow-2xl space-y-1 z-[1001] max-h-60 overflow-y-auto">
+              {searchResults.map((h) => (
+                <button
+                  key={h.id}
+                  type="button"
+                  onClick={() => handleSelectSearchResult(h)}
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-between cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <MapPin className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <div>
+                      <div className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
+                        {h.name}
+                      </div>
+                      <div className="text-[10px] text-zinc-400">{h.subhead}</div>
                     </div>
                   </div>
-                </Popup>
-              </Polygon>
-
-              {/* District HUD Marker Tag right on the map */}
-              <Marker
-                position={zone.center}
-                icon={createDistrictTagIcon(
-                  zone.name,
-                  zone.depthBadge.split('|')[0].trim(),
-                  zone.pingCount.split(' ')[1] || 'Active',
-                  zone.isCritical
-                )}
-                eventHandlers={{
-                  click: () => handleFocusLocation(zone.center[0], zone.center[1]),
-                }}
-              />
-            </React.Fragment>
-          ))}
-
-          {/* Dynamic database active zones if configured */}
-          {activeZones.map(
-            (zone) =>
-              zone.geojson && (
-                <Polygon
-                  key={zone.id}
-                  positions={zone.geojson.coordinates[0].map((coord: number[]) => [coord[1], coord[0]])}
-                  pathOptions={{
-                    fillColor: '#0284c7',
-                    fillOpacity: 0.28,
-                    color: '#f43f5e',
-                    weight: 2,
-                  }}
-                >
-                  <Popup className="disaster-popup">
-                    <div className="p-2">
-                      <h3 className="font-bold text-white">{zone.title}</h3>
-                      <p className="text-xs text-slate-300">Severity: {zone.severity_level}</p>
-                    </div>
-                  </Popup>
-                </Polygon>
-              )
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-zinc-300">
+                    {h.badgeText}
+                  </span>
+                </button>
+              ))}
+            </div>
           )}
+        </div>
 
-          {/* ------------------------------------------------------------- */}
-          {/* Active Emergency Distress Hotspot Markers                     */}
-          {/* ------------------------------------------------------------- */}
-          {emergencyRequests.map(
-            (req) =>
-              req.lat &&
-              req.lng && (
-                <Marker key={req.id} position={[req.lat, req.lng]} icon={emergencyAlertIcon}>
-                  <Popup className="disaster-popup min-w-[280px]">
-                    <div className="p-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <AlertTriangle className="text-rose-500 w-5 h-5" />
-                        <h3 className="font-bold text-white text-base leading-tight">{req.title}</h3>
-                      </div>
+        {/* Filter Pills with Tactical Atmospheric Glow */}
+        <div className="flex items-center gap-1.5 sm:gap-2 max-w-full overflow-x-auto py-1.5 px-3.5 no-scrollbar bg-[#0E1626]/85 backdrop-blur-2xl border border-slate-700/60 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.6)] pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => setActiveFilter('all')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeFilter === 'all'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.35)]'
+                : 'text-zinc-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_#06b6d4]"></span>
+            <span>All Disasters</span>
+          </button>
 
-                      <div className="flex items-center gap-1.5 text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-2 py-1 rounded-md text-xs font-semibold w-fit mb-3">
-                        <Target className="w-3.5 h-3.5" />
-                        {req.charity_name || 'Verified Relief Taskforce'}
-                      </div>
+          <button
+            type="button"
+            onClick={() => setActiveFilter('flood')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeFilter === 'flood'
+                ? 'bg-red-500/20 text-red-300 border border-red-400/60 shadow-[0_0_15px_rgba(239,68,68,0.35)]'
+                : 'text-zinc-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_#ef4444]"></span>
+            <span>Floods (Assam/Bihar)</span>
+          </button>
 
-                      <div className="mb-3 space-y-1.5">
-                        <div className="flex justify-between text-xs font-medium text-slate-300">
-                          <span className="flex items-center gap-1">
-                            <TrendingUp className="w-3.5 h-3.5 text-cyan-400" /> Raised
-                          </span>
-                          <span className="font-bold text-white">
-                            ₹{req.raised_amount.toLocaleString()} / ₹{req.target_amount.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
-                          <div
-                            className="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${Math.min((req.raised_amount / req.target_amount) * 100, 100)}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
+          <button
+            type="button"
+            onClick={() => setActiveFilter('cyclone')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeFilter === 'cyclone'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/60 shadow-[0_0_15px_rgba(245,158,11,0.35)]'
+                : 'text-zinc-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_6px_#f59e0b]"></span>
+            <span>Cyclones (Bay of Bengal)</span>
+          </button>
 
-                      {req.supplies_needed && req.supplies_needed.length > 0 && (
-                        <div className="mb-4">
-                          <p className="text-xs font-semibold text-slate-400 mb-1.5 flex items-center gap-1">
-                            <Package className="w-3.5 h-3.5 text-amber-400" /> Urgent Relief Supplies
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {req.supplies_needed.map((item: string, idx: number) => (
-                              <span
-                                key={idx}
-                                className="bg-rose-500/10 text-rose-300 text-[10px] px-2 py-0.5 rounded-md font-medium border border-rose-500/20"
-                              >
-                                {item}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+          <button
+            type="button"
+            onClick={() => setActiveFilter('landslide')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeFilter === 'landslide'
+                ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/60 shadow-[0_0_15px_rgba(234,179,8,0.35)]'
+                : 'text-zinc-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_6px_#eab308]"></span>
+            <span>Landslides (Wayanad)</span>
+          </button>
 
-                      <button
-                        onClick={() => setSelectedRequest(req)}
-                        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-2.5 rounded-xl transition-all shadow-lg active:scale-[0.98] text-xs flex items-center justify-center gap-2"
-                      >
-                        Donate Directly (0% Platform Fee)
-                      </button>
-                    </div>
-                  </Popup>
-                </Marker>
-              )
-          )}
-
-          {/* Animated Target Lock Marker */}
-          {focusedCoord && (
-            <Marker position={focusedCoord} icon={targetLockIcon} interactive={false} />
-          )}
-
-          {/* Realistic Animated Cyclone & Meteorological Radar Overlay */}
-          <CycloneRadarOverlay visible={showCycloneRadar} />
-        </MapContainer>
-
-        {/* ------------------------------------------------------------- */}
-        {/* Floating Map Legend (Bottom-Left Corner)                       */}
-        {/* ------------------------------------------------------------- */}
-        <div className="absolute bottom-3 left-3 z-[500] bg-[#0B0F19]/90 backdrop-blur-md p-3 rounded-2xl border border-slate-800 shadow-2xl text-[11px] space-y-1.5 text-slate-300 pointer-events-auto">
-          <div className="font-bold text-white text-xs flex items-center gap-1.5 pb-1 border-b border-slate-800">
-            <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" /> GIS Map Telemetry Legend
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-cyan-500/40 border border-rose-500"></span>
-            <span>Active Flood Inundation Polygon</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_#ef4444]"></span>
-            <span>Emergency Distress Signal (Hotspot)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-1 bg-rose-500 border border-white"></span>
-            <span>Projected 12h Landfall Cone</span>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] text-slate-400 pt-0.5">
-            <MapPin className="w-3 h-3 text-cyan-400" />
-            <span>Terrain Relief: Eastern India / Bengal Delta & Assam</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveFilter('hub')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeFilter === 'hub'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/60 shadow-[0_0_15px_rgba(16,185,129,0.35)]'
+                : 'text-zinc-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#10b981]"></span>
+            <span>Safe Hubs</span>
+          </button>
         </div>
       </div>
 
-      {/* ================================================================= */}
-      {/* 2. Right 1/3 - Dark Tactical Glassmorphism Dispatch Sidebar        */}
-      {/* ================================================================= */}
-      <div className="w-full lg:w-1/3 h-full bg-[#0B0F19] border-t lg:border-t-0 lg:border-l border-slate-800/90 flex flex-col overflow-hidden">
-        {/* Sidebar Header (Clean separated layout to eliminate text collisions) */}
-        <div className="p-5 border-b border-slate-800/80 bg-[#0F172A]/90 backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
-              Live Priority Dispatch
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-slate-400">
-              <Activity className="w-3.5 h-3.5 text-cyan-400 animate-pulse" /> Priority Hotspots
-            </span>
-          </div>
-          <h3 className="text-xl font-black text-white tracking-tight mt-1.5">
-            Emergency Relief Coordination
-          </h3>
-          <p className="text-xs text-slate-400 mt-1">
-            Real-time P0/P1 logistics, ration boats, and embankment defense operations.
-          </p>
-        </div>
+      {/* ------------------------------------------------------------- */}
+      {/* 2. FLOATING ZOOM & RECENTER BUTTONS (Bottom Right)             */}
+      {/* ------------------------------------------------------------- */}
+      <div className="absolute bottom-5 right-4 z-[1000] flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => setZoomAction('in')}
+          aria-label="Zoom in"
+          title="Zoom In"
+          className="w-9 h-9 rounded-full bg-[#0E1626]/90 hover:bg-[#131D35] text-white border border-slate-700/70 shadow-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 hover:border-cyan-400/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setZoomAction('out')}
+          aria-label="Zoom out"
+          title="Zoom Out"
+          className="w-9 h-9 rounded-full bg-[#0E1626]/90 hover:bg-[#131D35] text-white border border-slate-700/70 shadow-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 hover:border-cyan-400/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+        >
+          <Minus className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setZoomAction('recenter')}
+          aria-label="Recenter all-India"
+          title="Recenter All-India View"
+          className="w-9 h-9 rounded-full bg-[#0E1626]/90 hover:bg-[#131D35] text-cyan-400 border border-slate-700/70 shadow-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 hover:border-cyan-400/60 hover:shadow-[0_0_18px_rgba(6,182,212,0.4)]"
+        >
+          <Compass className="w-4 h-4" />
+        </button>
+      </div>
 
-        {/* Scrollable Rescue Hotspots List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
-          {emergencyRequests.map((req, idx) => (
-            <div
-              key={req.id}
-              className="bg-[#0F172A]/80 hover:bg-[#131D35] rounded-2xl border border-slate-800 hover:border-cyan-500/40 p-4 transition-all duration-200 shadow-lg group"
-            >
-              <div className="flex justify-between items-start gap-2 mb-2">
-                <h4 className="font-extrabold text-slate-100 text-sm leading-snug group-hover:text-cyan-300 transition-colors">
-                  {req.title}
-                </h4>
-                <span
-                  className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                    req.severity === 'P0' || idx % 2 === 0
-                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
-                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                  }`}
-                >
-                  {req.severity || (idx % 2 === 0 ? 'P0' : 'P1')}
-                </span>
-              </div>
+      {/* Bottom Left Live Ping Tag */}
+      <div className="pointer-events-none absolute bottom-5 left-4 z-[1000] hidden sm:flex items-center gap-2 font-mono text-[10px] text-zinc-400 bg-slate-950/70 px-3 py-1.5 rounded-full border border-white/5 backdrop-blur-md">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#10b981]" />
+        <span>LIVE TELEMETRY STREAMING // 12ms</span>
+      </div>
 
-              <p className="text-xs text-slate-400 mb-2.5 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="text-slate-300 font-medium">
-                  NGO: {req.charity_name || 'Verified Relief Taskforce'}
-                </span>
-              </p>
+      {/* ------------------------------------------------------------- */}
+      {/* 3. LEAFLET ALL-INDIA RADAR MAP CANVAS                         */}
+      {/* (Color graded into deep obsidian delta tone with NO watermarks)*/}
+      {/* ------------------------------------------------------------- */}
+      {React.createElement(
+        MapContainer as any,
+        {
+          center: [22.5937, 78.9629],
+          zoom: 5,
+          minZoom: 4,
+          maxZoom: 10,
+          maxBounds: [
+            [6.0, 68.0],
+            [37.5, 98.0]
+          ],
+          maxBoundsViscosity: 0.9,
+          zoomControl: false,
+          scrollWheelZoom: true,
+          style: { height: '100%', width: '100%', background: '#080D1A' }
+        },
+        <>
+          {/* ESRI World Dark Gray Base (Free, 0 Watermarks, Dark Subcontinental Cartography) */}
+          {React.createElement(TileLayer as any, {
+            attribution: '&copy; <a href="https://www.esri.com/">Esri</a> &mdash; GIS Radar',
+            url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+            maxZoom: 10,
+            minZoom: 4
+          })}
 
-              {req.supplies_needed && req.supplies_needed.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-3.5">
-                  {req.supplies_needed.map((item: string, i: number) => (
+          {/* ESRI Dark Gray Reference (Labels & Coastal Borders) */}
+          {React.createElement(TileLayer as any, {
+            attribution: '',
+            url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+            maxZoom: 10,
+            minZoom: 4
+          })}
+
+          {/* Map Controller for Programmatic Pan/Zoom */}
+          <MapController
+            targetCoords={targetCoords}
+            zoomAction={zoomAction}
+            onResetZoomAction={() => setZoomAction(null)}
+          />
+
+          {/* Hotspot Radar Pins */}
+          {visibleHotspots.map((hotspot) => {
+            const icon = createHotspotIcon(hotspot.category, hotspot.badgeText);
+
+            return React.createElement(
+              Marker as any,
+              { key: hotspot.id, position: [hotspot.lat, hotspot.lng], icon },
+              React.createElement(
+                Popup as any,
+                { className: 'disaster-popup', closeButton: false },
+                <div className="p-3.5 text-slate-100 min-w-[240px] max-w-[280px] bg-[#0E1626]/95 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl">
+                  {/* Severity & Category Header */}
+                  <div className="flex items-center justify-between gap-2 mb-2">
                     <span
-                      key={i}
-                      className="bg-slate-900 text-slate-300 text-[10px] font-medium px-2 py-0.5 rounded-md border border-slate-700/80"
+                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                        hotspot.severity === 'P0'
+                          ? 'bg-red-500/20 text-red-300 border-red-500/40'
+                          : hotspot.severity === 'P1'
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                          : hotspot.severity === 'P2'
+                          ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40'
+                          : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      }`}
                     >
-                      {item}
+                      {hotspot.severity === 'SAFE' ? 'SAFE HAVEN' : `${hotspot.severity} • CRITICAL`}
                     </span>
-                  ))}
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase">
+                      {hotspot.category}
+                    </span>
+                  </div>
+
+                  {/* Hotspot Name */}
+                  <h4 className="text-sm font-bold text-white mb-0.5 leading-snug">
+                    {hotspot.name}
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 mb-2.5 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-cyan-400 shrink-0" />
+                    <span>{hotspot.subhead}</span>
+                  </p>
+
+                  {/* Metric Box */}
+                  <div className="bg-slate-950/80 rounded-xl p-2.5 border border-white/10 space-y-1.5 mb-3 text-[11px] font-mono">
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-400">{hotspot.primaryMetricLabel}:</span>
+                      <span className="text-white font-bold">{hotspot.primaryMetricValue}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-400">{hotspot.secondaryMetricLabel}:</span>
+                      <span className="text-cyan-400">{hotspot.secondaryMetricValue}</span>
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleOpenTriage(hotspot)}
+                    className="w-full py-2 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.2)]"
+                  >
+                    <span>View Triage Details</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-              )}
-
-              <div className="flex justify-between items-center text-xs text-slate-400 mb-3.5 pt-2 border-t border-slate-800/80">
-                <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                  Active Distress: <strong className="text-slate-200">{req.active_distress || 35}</strong>
-                </span>
-                <span>
-                  Raised: <strong className="text-white">₹{(req.raised_amount / 1000).toFixed(1)}k</strong>
-                </span>
-              </div>
-
-              {/* Action Buttons: Focus Map & Direct Donate */}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => handleFocusLocation(req.lat, req.lng)}
-                  className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border border-slate-700 hover:border-cyan-500/50"
-                >
-                  <Crosshair className="w-3.5 h-3.5 text-cyan-400" /> Focus Map
-                </button>
-                <button
-                  onClick={() => setSelectedRequest(req)}
-                  className="w-full py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-500/20 active:scale-[0.98]"
-                >
-                  Donate 0% Fee
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {emergencyRequests.length === 0 && (
-            <div className="text-center text-slate-500 text-sm py-12">
-              <ShieldAlert className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-              Scanning for active disaster signals...
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* UPI Donation Modal */}
-      {selectedRequest && (
-        <UpiDonationModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
+              )
+            );
+          })}
+        </>
       )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* 4. INTERACTIVE ON-GROUND NEEDS MODAL LINKAGE                  */}
+      {/* ------------------------------------------------------------- */}
+      <OnGroundNeedsModal
+        zone={selectedTriageZone}
+        isOpen={!!selectedTriageZone}
+        onClose={() => setSelectedTriageZone(null)}
+      />
+
+      {/* ------------------------------------------------------------- */}
+      {/* 5. TACTICAL DELTA TONE COLOR GRADING & RADAR CSS ANIMATIONS   */}
+      {/* ------------------------------------------------------------- */}
+      <style jsx global>{`
+        /* Color Grade ESRI Basemap Tiles to Match Misty Mangrove Delta Tone */
+        .leaflet-tile-pane {
+          filter: brightness(0.68) contrast(1.3) hue-rotate(192deg) saturate(0.85);
+        }
+        .leaflet-container {
+          background: #080D1A !important;
+        }
+
+        .custom-radar-marker {
+          background: transparent !important;
+          border: none !important;
+        }
+        .hotspot-pin-wrapper {
+          position: relative;
+          width: 120px;
+          height: 44px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+        .radar-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          z-index: 10;
+          box-shadow: 0 0 10px currentColor;
+          border: 1.5px solid #ffffff;
+        }
+        .dot-crimson { background: #ef4444; color: #ef4444; }
+        .dot-amber { background: #f59e0b; color: #f59e0b; }
+        .dot-yellow { background: #eab308; color: #eab308; }
+        .dot-emerald { background: #10b981; color: #10b981; }
+
+        .pulse-ring-anim {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 28px;
+          height: 28px;
+          margin-top: -14px;
+          margin-left: -14px;
+          border-radius: 50%;
+          animation: radarRipple 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+        }
+        .ping-crimson { border: 2px solid rgba(239, 68, 68, 0.85); background: rgba(239, 68, 68, 0.25); }
+        .ping-yellow { border: 2px solid rgba(234, 179, 8, 0.85); background: rgba(234, 179, 8, 0.25); }
+        .ping-emerald { border: 2px solid rgba(16, 185, 129, 0.85); background: rgba(16, 185, 129, 0.25); }
+
+        .vortex-anim {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 34px;
+          height: 34px;
+          margin-top: -17px;
+          margin-left: -17px;
+          border-radius: 50%;
+          border: 2px dashed #f59e0b;
+          box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
+          animation: vortexRotate 4s linear infinite;
+        }
+        .ring-vortex-amber { background: rgba(245, 158, 11, 0.2); }
+
+        @keyframes radarRipple {
+          0% { transform: scale(0.5); opacity: 1; }
+          100% { transform: scale(2.2); opacity: 0; }
+        }
+        @keyframes vortexRotate {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .radar-badge {
+          position: absolute;
+          bottom: 0px;
+          font-family: monospace;
+          font-size: 9.5px;
+          font-weight: 700;
+          padding: 1.5px 6.5px;
+          border-radius: 9999px;
+          white-space: nowrap;
+          backdrop-filter: blur(12px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+          letter-spacing: -0.2px;
+          z-index: 12;
+        }
+        .badge-crimson { background: rgba(185, 28, 28, 0.9); border: 1px solid #ef4444; color: #fee2e2; }
+        .badge-amber { background: rgba(180, 83, 9, 0.9); border: 1px solid #f59e0b; color: #fef3c7; }
+        .badge-yellow { background: rgba(161, 98, 7, 0.9); border: 1px solid #eab308; color: #fef9c3; }
+        .badge-emerald { background: rgba(4, 120, 87, 0.9); border: 1px solid #10b981; color: #d1fae5; }
+      `}</style>
     </div>
   );
-};
-
-export default DisasterMapInner;
+}

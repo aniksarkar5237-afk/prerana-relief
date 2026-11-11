@@ -25,12 +25,21 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "PreranaAid | Protecting Lives, Restoring the Delta",
   description: "A high-trust, decentralized emergency relief and evacuation platform. Protecting vulnerable communities, dispatching emergency rescue, and monitoring flood radar.",
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/brand-pr-logo.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/brand-pr-logo.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${plusJakarta.variable} ${newsreader.variable} ${jetbrainsMono.variable} scroll-smooth`}>
-      <body className="font-sans antialiased bg-[#0e1311] text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-200">
+      <body className="font-sans antialiased bg-[#080D1A] text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-200">
         {children}
       </body>
     </html>

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Menu, X, ArrowUpRight } from 'lucide-react';
 import QuickDistressReporter from './QuickDistressReporter';
+import BrandLogo from './BrandLogo';
 
 interface NavbarProps {
   onOpenReporter?: () => void;
@@ -41,23 +42,19 @@ export default function Navbar({ onOpenReporter, activeTab = 'Home', onTabChange
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-8 lg:px-12 pt-4 sm:pt-6">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        
-        {/* Brand Logo - PreranaAid // ReliefGrid matching cinematic dusk visual */}
+
+        {/* Brand Logo - Dedicated PR Botanical Delta Monogram */}
         <button
           type="button"
           onClick={() => handleTabClick('Home')}
-          className="flex items-center gap-2 group select-none text-left cursor-pointer"
+          className="flex items-center gap-2 group select-none text-left cursor-pointer focus:outline-none transition-transform duration-200 hover:scale-[1.02]"
+          aria-label="PreranaAid Home"
         >
-          <span className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] group-hover:text-cyan-200 transition-colors">
-            PreranaAid
-          </span>
-          <span className="hidden xl:inline-block text-[10px] font-mono font-bold tracking-widest text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-500/30">
-            RELIEFGRID
-          </span>
+          <BrandLogo className="h-9 w-auto" showText={true} />
         </button>
 
-        {/* Floating Enclosed Pill-Shaped Navigation Bar (Center Tube on Dark Glass Overlay) */}
-        <div className="hidden lg:flex items-center rounded-full px-2 py-1.5 transition-all duration-300 bg-[#0E1626]/80 hover:bg-[#0E1626]/92 backdrop-blur-2xl border border-slate-700/60 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+        {/* Floating Enclosed Pill-Shaped Navigation Bar (Center Tube) on Ultra-Dark Glass */}
+        <div className="hidden lg:flex items-center rounded-full px-2 py-1.5 transition-all duration-300 bg-[#0E1626]/80 hover:bg-[#0E1626]/90 backdrop-blur-2xl border border-slate-700/60 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
           {navTabs.map((tab) => {
             const isActive = activeTab === tab.name;
             return (
@@ -65,22 +62,23 @@ export default function Navbar({ onOpenReporter, activeTab = 'Home', onTabChange
                 key={tab.name}
                 type="button"
                 onClick={() => handleTabClick(tab.name)}
-                className={`transition-all duration-200 text-xs xl:text-sm cursor-pointer flex items-center gap-1 ${
-                  isActive
-                    ? 'bg-[#1e293b]/95 text-white shadow-[0_0_15px_rgba(52,211,153,0.2)] font-semibold rounded-full px-4 py-1.5 border border-slate-600/60'
+                className={`transition-all duration-200 text-xs xl:text-sm cursor-pointer flex items-center gap-1 ${isActive
+                    ? 'bg-[#1e293b]/95 text-white shadow-[0_0_15px_rgba(56,189,248,0.2)] font-semibold rounded-full px-4 py-1.5 border border-slate-600/70'
                     : 'text-slate-300 hover:text-white px-3.5 py-1.5 rounded-full hover:bg-white/5 font-medium'
-                }`}
+                  }`}
               >
                 <span>{tab.name}</span>
                 {tab.hasDot && (
-                  <span className="text-cyan-400 font-bold ml-0.5">•</span>
+                  <span className="font-bold text-xs text-cyan-400">
+                    •
+                  </span>
                 )}
               </button>
             );
           })}
         </div>
 
-        {/* Top Right Action Buttons */}
+        {/* Top Right Action Buttons (Ultra-Dark Glass) */}
         <div className="hidden sm:flex items-center gap-2.5">
           {/* Rounded Pill-Shaped "Launch Grid" Button */}
           <button
@@ -96,7 +94,7 @@ export default function Navbar({ onOpenReporter, activeTab = 'Home', onTabChange
             type="button"
             onClick={handleOpenReporter}
             title="Toggle Emergency Command Console"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#1e231f] hover:bg-[#121613] text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95 shadow-md border border-slate-700/50 cursor-pointer"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#161a17] hover:bg-[#121613] text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95 shadow-md border border-slate-700/60 cursor-pointer"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
@@ -110,21 +108,19 @@ export default function Navbar({ onOpenReporter, activeTab = 'Home', onTabChange
           <button
             type="button"
             onClick={handleOpenReporter}
-            className={`sm:hidden px-3 py-1.5 rounded-full text-xs font-semibold ${
-              isHome
-                ? 'border border-slate-700/40 bg-white/60 text-slate-900'
-                : 'border border-slate-700/60 bg-[#0E1626]/80 text-white'
-            }`}
+            className={`sm:hidden px-3 py-1.5 rounded-full text-xs font-semibold ${isHome
+              ? 'border border-slate-700/40 bg-white/60 text-slate-900'
+              : 'border border-slate-700/60 bg-[#0E1626]/80 text-white'
+              }`}
           >
             Launch Grid
           </button>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm cursor-pointer ${
-              isHome
-                ? 'bg-white/80 border border-white/80 text-[#1e231f]'
-                : 'bg-[#0E1626]/80 border border-slate-700/60 text-white'
-            }`}
+            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm cursor-pointer ${isHome
+              ? 'bg-white/80 border border-white/80 text-[#1e231f]'
+              : 'bg-[#0E1626]/80 border border-slate-700/60 text-white'
+              }`}
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -134,11 +130,10 @@ export default function Navbar({ onOpenReporter, activeTab = 'Home', onTabChange
       {/* Mobile Drawer Menu */}
       {isOpen && (
         <div
-          className={`lg:hidden mt-3 max-w-md mx-auto backdrop-blur-2xl rounded-3xl p-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${
-            isHome
-              ? 'bg-white/95 border border-white/80 text-slate-900'
-              : 'bg-[#0E1626]/95 border border-slate-700/80 text-white'
-          }`}
+          className={`lg:hidden mt-3 max-w-md mx-auto backdrop-blur-2xl rounded-3xl p-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${isHome
+            ? 'bg-white/95 border border-white/80 text-slate-900'
+            : 'bg-[#0E1626]/95 border border-slate-700/80 text-white'
+            }`}
         >
           <div className="flex flex-col space-y-2">
             {navTabs.map((tab) => (
@@ -149,15 +144,14 @@ export default function Navbar({ onOpenReporter, activeTab = 'Home', onTabChange
                   handleTabClick(tab.name);
                   setIsOpen(false);
                 }}
-                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left w-full cursor-pointer flex items-center justify-between ${
-                  activeTab === tab.name
-                    ? isHome
-                      ? 'bg-[#1e231f] text-white'
-                      : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                    : isHome
+                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left w-full cursor-pointer flex items-center justify-between ${activeTab === tab.name
+                  ? isHome
+                    ? 'bg-[#1e231f] text-white'
+                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  : isHome
                     ? 'text-[#444c45] hover:bg-slate-100 hover:text-black'
                     : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
-                }`}
+                  }`}
               >
                 <span>{tab.name}</span>
                 {tab.hasDot && <span className="text-cyan-400 font-bold">•</span>}

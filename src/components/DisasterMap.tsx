@@ -6,8 +6,12 @@ import React from 'react';
 const DisasterMapInner = dynamic(() => import('./DisasterMapInner'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[600px] bg-gray-100 rounded-2xl animate-pulse flex items-center justify-center shadow-xl border border-gray-200">
-      <div className="text-gray-500 font-medium">Loading GIS Disaster Map...</div>
+    <div className="w-full h-[620px] sm:h-[660px] bg-slate-950/80 backdrop-blur-xl rounded-2xl animate-pulse flex flex-col items-center justify-center gap-3 border border-white/10 shadow-2xl">
+      <div className="flex items-center gap-2.5 text-cyan-400 font-mono text-sm">
+        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+        <span>Initializing Tactical All-India Disaster Radar...</span>
+      </div>
+      <div className="text-zinc-500 text-xs font-mono">Loading Tactical Subcontinental GIS Radar Basemap</div>
     </div>
   ),
 });

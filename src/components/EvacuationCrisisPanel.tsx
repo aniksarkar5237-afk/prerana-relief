@@ -223,7 +223,7 @@ export default function EvacuationCrisisPanel() {
           {villages.map((village) => (
             <div
               key={village.id}
-              className="p-6 rounded-2xl bg-[#0F172A]/90 border border-slate-800 hover:border-slate-700 transition-all shadow-xl backdrop-blur-sm"
+              className="p-6 rounded-2xl bg-slate-900/60 border border-white/10 hover:border-cyan-500/30 transition-all shadow-2xl backdrop-blur-xl"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
                 <div>
@@ -334,7 +334,7 @@ export default function EvacuationCrisisPanel() {
         </div>
 
         {/* Right Column: Live USSD & IVRS Voice Hotline Simulator (1 col) */}
-        <div className="rounded-2xl bg-[#0F172A] border border-slate-800 p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+        <div className="rounded-2xl bg-slate-900/60 border border-white/10 backdrop-blur-xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
 
           <div>

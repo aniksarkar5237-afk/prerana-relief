@@ -1,21 +1,24 @@
 'use client';
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
-  ShieldCheck,
-  Compass,
-  Radio,
-  HeartHandshake,
+  PhoneCall,
   Cpu,
-  Navigation,
-  FileCheck2,
-  CheckCircle2,
-  Lock,
-  ArrowRight,
-  Layers,
-  MoreVertical,
+  ShieldAlert,
+  Radio,
   Globe,
   Mail,
+  ArrowRight,
+  ShieldCheck,
+  Compass,
+  HeartHandshake,
+  Layers,
+  Navigation,
+  FileCheck2,
+  Lock,
   ExternalLink,
+  Activity,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface AboutUsSectionProps {
@@ -26,53 +29,62 @@ interface AboutUsSectionProps {
 export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: AboutUsSectionProps) {
   const [activeStep, setActiveStep] = useState(0);
 
-  const pillars = [
+  // 1. Three Core Architecture Feature Cards
+  const architectureFeatures = [
     {
-      badge: 'Our Mission',
-      title: 'Our Mission',
-      subtitle: 'Radical Transparency in Crisis Rescue',
-      description: 'Eradicating intermediary fraud and direct zero-MDR UPI routing.',
-      icon: ShieldCheck,
-      color: 'text-emerald-400',
-      badgeBg: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
-      dotsColor: 'text-emerald-400',
-      glow: 'hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(52,211,153,0.15)]',
-    },
-    {
-      badge: 'Our Vision',
-      title: 'Our Vision',
-      subtitle: 'Autonomous Disaster Grid',
-      description: 'Self-triage and coordinate boat rescues within minutes of cellular failure.',
-      icon: Compass,
-      color: 'text-cyan-400',
+      id: 'telephony',
+      title: 'Offline-First Telephony',
+      subtitle: 'Toll-Free 1938 IVRS & 2G USSD (*139#) Fallback',
+      tag: '2G GSM // ZERO-DATA INGEST',
+      description:
+        'Engineered for total blackout conditions when cell towers, fiber lines, and internet networks collapse. Marooned victims dial toll-free shortcode 1938 via basic 2G feature phones or trigger *139# USSD sessions to broadcast triage coordinates without active mobile data.',
+      icon: PhoneCall,
+      accentColor: 'text-cyan-400',
       badgeBg: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300',
-      dotsColor: 'text-cyan-400',
-      glow: 'hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]',
+      glow: 'group-hover:border-cyan-400/50 group-hover:shadow-[0_0_30px_rgba(6,182,212,0.2)]',
+      highlights: [
+        'Toll-Free 1938 emergency IVRS prompt',
+        '2G USSD *139# fallback during tower failure',
+        'Sub-45s carrier-agnostic packet ingestion',
+      ],
     },
     {
-      badge: 'Our Goal',
-      title: 'Our Goal',
-      subtitle: 'Sub-60s Offline Telephony',
-      description: '1938 IVRS/USSD triage with PostGIS automated shelter allocation.',
-      icon: Radio,
-      color: 'text-amber-400',
+      id: 'spatial-radar',
+      title: 'PostGIS Spatial Radar',
+      subtitle: 'ST_DWithin Clustering & Elevation Benchmarking',
+      tag: 'GEOSPATIAL TOPOLOGICAL TRIAGE',
+      description:
+        'Autonomous spatial triage engine performing real-time ST_DWithin radius clustering across remote riverine delta sectors. Correlates distress GPS/cell tower coordinates against high-resolution topological elevation data to triage urgent boat rescues away from perilous flood crests.',
+      icon: Cpu,
+      accentColor: 'text-emerald-400',
+      badgeBg: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+      glow: 'group-hover:border-emerald-400/50 group-hover:shadow-[0_0_30px_rgba(52,211,153,0.2)]',
+      highlights: [
+        'Automated ST_DWithin incident clustering',
+        'Topological bathymetry & flood elevation models',
+        'Dynamic boat-to-SOS safe vector routing',
+      ],
+    },
+    {
+      id: 'cryptographic-sentinel',
+      title: 'Cryptographic Sentinel',
+      subtitle: '64-bit dHash Perceptual Hashing & DARPAN Checksums',
+      tag: 'ZERO-LEAKAGE FORENSIC ESCROW',
+      description:
+        'Fraud prevention pipeline utilizing 64-bit dHash perceptual image hashing to detect duplicate photo submissions and spoofed relief claims. Enforces automated statutory NITI Aayog Darpan ID and PAN checksum audits before milestone relief funds release via direct zero-MDR UPI.',
+      icon: ShieldAlert,
+      accentColor: 'text-amber-400',
       badgeBg: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
-      dotsColor: 'text-amber-400',
-      glow: 'hover:border-amber-400/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]',
-    },
-    {
-      badge: 'Societal Impact',
-      title: 'Societal Impact',
-      subtitle: 'Community Empowerment',
-      description: '100% fund-to-field delivery with Sentinel dHash forensic verification.',
-      icon: HeartHandshake,
-      color: 'text-rose-400',
-      badgeBg: 'bg-rose-500/10 border-rose-500/30 text-rose-300',
-      dotsColor: 'text-rose-400',
-      glow: 'hover:border-rose-400/50 hover:shadow-[0_0_20px_rgba(244,63,94,0.15)]',
+      glow: 'group-hover:border-amber-400/50 group-hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]',
+      highlights: [
+        '64-bit dHash forensic perceptual image hashing',
+        'Statutory NITI Darpan & PAN checksum validation',
+        '100% direct-to-field zero-MDR milestone escrow',
+      ],
     },
   ];
 
+  // 2. Interactive 5-Step System Workflow
   const workflowSteps = [
     {
       step: '01',
@@ -122,13 +134,86 @@ export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: A
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-24 relative z-10">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       
       {/* ------------------------------------------------------------- */}
-      {/* 1. FOUNDER & CORE LEADERSHIP CARD (High-Luxury Glassmorphic) */}
+      {/* 1. SECTION HEADER (Tactical Command Dashboard Identity)        */}
       {/* ------------------------------------------------------------- */}
-      <div className="max-w-5xl mx-auto rounded-3xl bg-[#0E1626]/80 backdrop-blur-2xl border border-slate-700/60 shadow-[0_20px_50px_rgba(0,0,0,0.6)] p-6 sm:p-8 md:p-10 mb-14 relative overflow-hidden">
-        {/* Subtle interior ambient light bloom */}
+      <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+        {/* Small uppercase mono tag */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/60 border border-white/10 text-[11px] font-mono font-bold tracking-[0.25em] text-cyan-400 uppercase mb-4 shadow-sm backdrop-blur-md">
+          <Activity className="w-3.5 h-3.5 animate-pulse text-cyan-400" />
+          <span>SYSTEM ARCHITECTURE & CAPABILITIES</span>
+        </div>
+
+        {/* Main heading */}
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-[1.12] mb-4">
+          Engineered for Grid-Down Emergency Dispatch
+        </h2>
+
+        {/* Brief subhead detailing offline-first resilience */}
+        <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal max-w-2xl mx-auto">
+          Architected for uncompromising offline-first resilience across remote riverine delta zones (Sundarbans & Barak Basin). Ensuring uninterrupted humanitarian triage when conventional power, cell towers, and data backbones completely fail.
+        </p>
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 2. THREE CORE FEATURE CARDS (1 col on mobile, 3 cols desktop)  */}
+      {/* ------------------------------------------------------------- */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-20 sm:mb-24">
+        {architectureFeatures.map((feature) => (
+          <motion.div
+            key={feature.id}
+            whileHover={{ y: -6 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className={`relative rounded-2xl bg-slate-900/60 border border-white/10 backdrop-blur-xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl ${feature.glow} transition-all duration-300 group overflow-hidden`}
+          >
+            {/* Subtle top ambient glow inside the card */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none -mr-16 -mt-16 group-hover:bg-cyan-500/10 transition-colors" />
+
+            <div>
+              {/* Card Header: Icon + Tactical Mono Tag */}
+              <div className="flex items-center justify-between gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-slate-950/80 border border-white/10 flex items-center justify-center shadow-inner group-hover:border-white/20 transition-colors">
+                  <feature.icon className={`w-6 h-6 ${feature.accentColor}`} />
+                </div>
+                <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border ${feature.badgeBg}`}>
+                  {feature.tag}
+                </span>
+              </div>
+
+              {/* Title & Subtitle */}
+              <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight mb-2 group-hover:text-cyan-200 transition-colors">
+                {feature.title}
+              </h3>
+              <div className="text-xs sm:text-sm font-semibold text-slate-300 mb-4 font-mono leading-snug">
+                {feature.subtitle}
+              </div>
+
+              {/* Deep Technical Description */}
+              <p className="text-xs sm:text-[13px] text-zinc-300 leading-relaxed font-normal mb-6">
+                {feature.description}
+              </p>
+            </div>
+
+            {/* Tactical Highlights Bulleted HUD */}
+            <div className="pt-4 border-t border-white/10 space-y-2 font-mono text-[11px] sm:text-xs text-zinc-300">
+              {feature.highlights.map((highlight, hIdx) => (
+                <div key={hIdx} className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                  <span className="text-zinc-200">{highlight}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 3. FOUNDER & CORE LEADERSHIP CARD                             */}
+      {/* ------------------------------------------------------------- */}
+      <div className="max-w-5xl mx-auto rounded-2xl bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl p-6 sm:p-8 md:p-10 mb-20 relative overflow-hidden">
+        {/* Interior ambient light bloom */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -146,7 +231,6 @@ export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: A
               viewBox="0 0 256 256"
             >
               <defs>
-                {/* Clockwise circular path starting from lower-left around the top to lower-right */}
                 <path
                   id="avatarTextRing"
                   d="M 32, 142 A 96,96 0 1,1 224, 142"
@@ -192,24 +276,24 @@ export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: A
             <div className="text-sky-400 font-semibold text-sm sm:text-base mb-0.5">
               Founder & Lead System Architect
             </div>
-            <div className="text-slate-300 text-xs sm:text-sm mb-4">
+            <div className="text-zinc-300 text-xs sm:text-sm mb-4">
               Dept. of Computer Science & Engineering, JIS College of Engineering
             </div>
 
             {/* Manifesto Paragraph */}
-            <p className="text-slate-200 text-xs sm:text-sm leading-relaxed mb-5 font-normal max-w-xl">
+            <p className="text-zinc-300 text-xs sm:text-sm leading-relaxed mb-5 font-normal max-w-xl">
               Disaster relief fails not from a lack of human empathy, but from broken last-mile infrastructure. PreranaAid was engineered to bridge the 2G gap and guarantee verified resources reach marooned families.
             </p>
 
             {/* 3 Glowing Credential Chips */}
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 mb-5">
-              <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-medium bg-slate-900/80 border border-slate-700/80 text-slate-200 shadow-sm">
+              <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-medium bg-slate-950/80 border border-white/10 text-zinc-300 shadow-sm">
                 Full-Stack Geospatial Engineering
               </span>
-              <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-medium bg-slate-900/80 border border-slate-700/80 text-slate-200 shadow-sm">
+              <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-medium bg-slate-950/80 border border-white/10 text-zinc-300 shadow-sm">
                 Ground Leadership & Volunteer Mobilization
               </span>
-              <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-medium bg-slate-900/80 border border-amber-500/60 text-amber-200 shadow-[0_0_14px_rgba(245,158,11,0.25)]">
+              <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-medium bg-slate-950/80 border border-amber-500/50 text-amber-200 shadow-[0_0_14px_rgba(245,158,11,0.25)]">
                 Zero-MDR Humanitarian Commitment
               </span>
             </div>
@@ -218,7 +302,7 @@ export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: A
             <div className="flex items-center justify-center md:justify-start gap-2.5">
               <a
                 href="mailto:aniksarkar5237@gmail.com"
-                className="px-4 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-slate-100 text-xs font-semibold border border-slate-700 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-slate-100 text-xs font-semibold border border-white/10 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
               >
                 <Mail className="w-3.5 h-3.5 text-slate-300" />
                 <span>Contact</span>
@@ -230,7 +314,7 @@ export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: A
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Founder on X"
-                className="p-2 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-slate-300 hover:text-white border border-slate-700 transition-all shadow-sm cursor-pointer"
+                className="p-2 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-slate-300 hover:text-white border border-white/10 transition-all shadow-sm cursor-pointer"
                 aria-label="X Profile"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -244,7 +328,7 @@ export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: A
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Open Source Portfolio"
-                className="p-2 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-slate-300 hover:text-white border border-slate-700 transition-all shadow-sm cursor-pointer"
+                className="p-2 rounded-full bg-slate-800/80 hover:bg-slate-700/90 text-slate-300 hover:text-white border border-white/10 transition-all shadow-sm cursor-pointer"
                 aria-label="Web Portfolio"
               >
                 <Globe className="w-3.5 h-3.5" />
@@ -256,75 +340,19 @@ export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: A
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 2. CORE PILLARS SECTION (Below Founder Card)                  */}
+      {/* 4. INTERACTIVE 5-STEP SYSTEM WORKFLOW                         */}
       {/* ------------------------------------------------------------- */}
-      <div className="mb-16">
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-8">
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-2">
-            Engineered for Resilience. Built for Zero Leakage.
-          </h3>
-          <div className="text-xs font-mono font-bold tracking-[0.25em] text-cyan-400 uppercase">
-            CORE PILLARS
-          </div>
-        </div>
-
-        {/* 4-Column Responsive Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {pillars.map((pillar, idx) => (
-            <div
-              key={idx}
-              className={`bg-[#0E1626]/70 hover:bg-[#0E1626]/90 backdrop-blur-xl border border-slate-700/50 ${pillar.glow} rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex flex-col justify-between`}
-            >
-              <div>
-                {/* Top Row: Icon Box + Title + Vertical 3-Dots */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-slate-900/90 border border-slate-700/60 flex items-center justify-center shadow-inner">
-                      <pillar.icon className={`w-5 h-5 ${pillar.color}`} />
-                    </div>
-                    <span className="text-sm font-bold text-white tracking-tight">
-                      {pillar.title}
-                    </span>
-                  </div>
-
-                  {/* Tactical Vertical 3 Dots */}
-                  <div className={`flex flex-col gap-0.5 ${pillar.dotsColor}`}>
-                    <span className="w-1 h-1 rounded-full bg-current opacity-80" />
-                    <span className="w-1 h-1 rounded-full bg-current opacity-80" />
-                    <span className="w-1 h-1 rounded-full bg-current opacity-80" />
-                  </div>
-                </div>
-
-                {/* Subtitle */}
-                <h4 className="text-sm font-semibold text-slate-100 mb-1.5 leading-snug">
-                  {pillar.subtitle}
-                </h4>
-
-                {/* Description */}
-                <p className="text-xs text-slate-300 leading-relaxed font-normal">
-                  {pillar.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ------------------------------------------------------------- */}
-      {/* 3. INTERACTIVE 5-STEP SYSTEM WORKFLOW                         */}
-      {/* ------------------------------------------------------------- */}
-      <div className="bg-[#0E1626]/75 backdrop-blur-xl border border-slate-700/60 rounded-3xl p-6 sm:p-10 mb-16 shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-800/80">
+      <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-10 mb-16 shadow-2xl relative">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-white/10">
           <div>
             <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono font-bold uppercase tracking-wider mb-1">
               <Layers className="w-4 h-4" /> Telemetry & Settlement Architecture
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               5-Step Zero-Leakage Pipeline
-            </h2>
+            </h3>
           </div>
-          <span className="text-xs font-mono text-slate-400 bg-slate-900/80 px-3.5 py-1.5 rounded-full border border-slate-800 self-start">
+          <span className="text-xs font-mono text-zinc-300 bg-slate-950/80 px-3.5 py-1.5 rounded-full border border-white/10 self-start">
             Total Cycle Latency: <strong className="text-emerald-400">&lt; 3.5 Mins</strong>
           </span>
         </div>
@@ -335,10 +363,10 @@ export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: A
             <div
               key={idx}
               onClick={() => setActiveStep(idx)}
-              className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col justify-between ${
+              className={`p-5 rounded-xl border transition-all duration-300 cursor-pointer flex flex-col justify-between ${
                 activeStep === idx
-                  ? 'bg-slate-900/90 border-cyan-400/60 shadow-[0_0_20px_rgba(6,182,212,0.15)] -translate-y-1'
-                  : 'bg-slate-900/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/60'
+                  ? 'bg-slate-950/90 border-cyan-400/60 shadow-[0_0_20px_rgba(6,182,212,0.15)] -translate-y-1'
+                  : 'bg-slate-950/40 border-white/10 hover:border-white/20 hover:bg-slate-950/60'
               }`}
             >
               <div>
@@ -357,7 +385,7 @@ export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: A
                 <h4 className="text-sm font-bold text-white mb-2 leading-tight">
                   {step.title}
                 </h4>
-                <p className="text-xs text-slate-300 leading-relaxed font-normal">
+                <p className="text-xs text-zinc-300 leading-relaxed font-normal">
                   {step.description}
                 </p>
               </div>
@@ -373,25 +401,25 @@ export default function AboutUsSection({ onLaunchConsole, onNavigateContact }: A
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 4. REAL-TIME IMPACT COUNTERS                                  */}
+      {/* 5. REAL-TIME IMPACT COUNTERS                                  */}
       {/* ------------------------------------------------------------- */}
-      <div className="bg-[#0E1626]/85 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-4 sm:p-6 shadow-2xl">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center divide-y md:divide-y-0 md:divide-x divide-slate-800">
+      <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-2xl">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center divide-y md:divide-y-0 md:divide-x divide-white/10">
           <div className="p-3">
             <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400 font-mono tracking-tight">₹0 Cut</div>
-            <div className="text-xs font-medium text-slate-300 uppercase tracking-wider mt-1">Middleman Deductions</div>
+            <div className="text-xs font-medium text-zinc-300 uppercase tracking-wider mt-1">Middleman Deductions</div>
           </div>
           <div className="p-3">
             <div className="text-2xl sm:text-3xl font-extrabold text-cyan-400 font-mono tracking-tight">&lt; 45s</div>
-            <div className="text-xs font-medium text-slate-300 uppercase tracking-wider mt-1">Telephony Signal Ingest</div>
+            <div className="text-xs font-medium text-zinc-300 uppercase tracking-wider mt-1">Telephony Signal Ingest</div>
           </div>
           <div className="p-3">
             <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">100%</div>
-            <div className="text-xs font-medium text-slate-300 uppercase tracking-wider mt-1">Geotag Forensic Audited</div>
+            <div className="text-xs font-medium text-zinc-300 uppercase tracking-wider mt-1">Geotag Forensic Audited</div>
           </div>
           <div className="p-3">
             <div className="text-2xl sm:text-3xl font-extrabold text-rose-400 font-mono tracking-tight">24/7/365</div>
-            <div className="text-xs font-medium text-slate-300 uppercase tracking-wider mt-1">Grid Resiliency & Carrier Link</div>
+            <div className="text-xs font-medium text-zinc-300 uppercase tracking-wider mt-1">Grid Resiliency & Carrier Link</div>
           </div>
         </div>
       </div>
